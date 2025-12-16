@@ -6,7 +6,7 @@
     <link rel="manifest" href="manifest.webmanifest" />
     <meta name="theme-color" content="#0b0b0f" />
 
-    <!-- iOS Add to Home Screen -->
+    <!-- iOS “Add to Home Screen” niceties -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta
       name="apple-mobile-web-app-status-bar-style"
@@ -30,43 +30,34 @@
         display: grid;
         gap: 12px;
         grid-template-columns: 320px 1fr;
+        align-items: start;
       }
       @media (max-width: 900px) {
         .app {
           grid-template-columns: 1fr;
         }
       }
+
       .card {
         background: #12121a;
         border: 1px solid #222232;
         border-radius: 14px;
         padding: 12px;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+      }
+      h1 {
+        margin: 0 0 4px;
+        font-size: 18px;
+      }
+      .muted {
+        color: #a8a8c2;
+        font-size: 12px;
       }
       .row {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
         align-items: center;
-      }
-      .muted {
-        color: #a8a8c2;
-        font-size: 12px;
-      }
-      .btn {
-        background: #181826;
-        border: 1px solid #2b2b45;
-        color: #eaeaf2;
-        padding: 8px 10px;
-        border-radius: 12px;
-        cursor: pointer;
-      }
-      .btn.primary {
-        border-color: #2c4a7a;
-        background: #131a2a;
-      }
-      .btn.danger {
-        border-color: #4a2530;
-        background: #1a1015;
       }
 
       .drop {
@@ -75,9 +66,31 @@
         border-radius: 14px;
         padding: 12px;
         text-align: center;
+        color: #b9b9d6;
       }
       .drop.drag {
         border-color: #eaeaf2;
+        color: #eaeaf2;
+      }
+
+      .btn {
+        background: #181826;
+        border: 1px solid #2b2b45;
+        color: #eaeaf2;
+        padding: 8px 10px;
+        border-radius: 12px;
+        cursor: pointer;
+      }
+      .btn:hover {
+        border-color: #5a5a86;
+      }
+      .btn.danger {
+        border-color: #4a2530;
+        background: #1a1015;
+      }
+      .btn.primary {
+        border-color: #2c4a7a;
+        background: #131a2a;
       }
 
       .lib {
@@ -86,26 +99,48 @@
         gap: 8px;
         max-height: 42vh;
         overflow: auto;
+        padding-right: 4px;
       }
-
       .item {
         display: flex;
         justify-content: space-between;
+        gap: 10px;
         align-items: center;
         background: #10101a;
         border: 1px solid #222232;
         border-radius: 12px;
         padding: 10px;
       }
+      .item strong {
+        font-size: 13px;
+      }
+      .item small {
+        display: block;
+        color: #a8a8c2;
+        font-size: 11px;
+        margin-top: 2px;
+      }
+
+      .gridWrap {
+        display: grid;
+        gap: 12px;
+      }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
 
       .pads {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(4, minmax(0, 1fr));
         gap: 10px;
       }
       @media (max-width: 500px) {
         .pads {
-          grid-template-columns: repeat(2, 1fr);
+          grid-template-columns: repeat(2, minmax(0, 1fr));
         }
       }
 
@@ -115,7 +150,14 @@
         border-radius: 16px;
         padding: 12px;
         min-height: 86px;
+        display: grid;
+        gap: 6px;
+        user-select: none;
         cursor: pointer;
+        touch-action: manipulation;
+      }
+      .pad:hover {
+        border-color: #5a5a86;
       }
       .pad.active {
         outline: 2px solid #eaeaf2;
@@ -123,7 +165,27 @@
       .pad.drag {
         outline: 2px solid #7fd1ff;
       }
+      .pad .name {
+        font-weight: 700;
+        font-size: 13px;
+      }
+      .pad .meta {
+        font-size: 11px;
+        color: #a8a8c2;
+      }
 
+      .controls {
+        display: grid;
+        gap: 10px;
+      }
+      .field {
+        display: grid;
+        gap: 6px;
+      }
+      label {
+        font-size: 12px;
+        color: #cfcfe6;
+      }
       input[type="range"] {
         width: 100%;
       }
@@ -134,6 +196,11 @@
         padding: 8px;
         border-radius: 12px;
       }
+      .kbd {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px;
+        color: #a8a8c2;
+      }
     </style>
   </head>
 
@@ -141,43 +208,48 @@
     <div class="card">
       <h1>CuePad</h1>
       <div class="muted">
-        Mobile-friendly drum pad / soundboard. Sounds are stored locally on your
-        device.
+        Drag audio into your Library. Drag a library sound onto a pad. Tap/click
+        pads to play. Sounds & kits are stored locally in your browser
+        (IndexedDB).
       </div>
     </div>
 
     <div class="app">
-      <!-- LEFT -->
+      <!-- LEFT: Library -->
       <div class="card">
         <div class="row" style="justify-content: space-between">
-          <strong>Library</strong>
+          <div>
+            <div style="font-weight: 700">Library</div>
+            <div class="muted">Your sounds stay on this device.</div>
+          </div>
           <button class="btn danger" id="clearAll">Clear All</button>
         </div>
 
         <div id="drop" class="drop">
-          Drag audio files here (desktop)<br />
-          <span class="muted">Mobile: use Import Sounds</span>
+          Drop WAV/MP3/OGG here<br />
+          <span class="kbd">Tip: first tap “Tap to Arm Audio” on mobile.</span>
         </div>
 
+        <!-- ✅ UPDATED BUTTON ROW: adds Import Sounds -->
         <div class="row" style="margin-top: 10px">
           <button class="btn" id="exportKit">Export Kit</button>
 
-          <!-- SOUND IMPORT -->
+          <!-- ✅ Import Sounds (mobile-friendly) -->
           <input
             id="importSoundsFile"
             type="file"
             multiple
             accept="audio/*"
-            hidden
+            style="display: none"
           />
           <button class="btn primary" id="importSounds">Import Sounds</button>
 
-          <!-- KIT IMPORT -->
+          <!-- Kit import (JSON only) -->
           <input
             id="importKitFile"
             type="file"
             accept="application/json"
-            hidden
+            style="display: none"
           />
           <button class="btn" id="importKit">Import Kit</button>
         </div>
@@ -185,48 +257,190 @@
         <div id="lib" class="lib"></div>
       </div>
 
-      <!-- RIGHT -->
-      <div>
-        <div class="card row">
-          <button class="btn primary" id="arm">Tap to Arm Audio</button>
-          <button class="btn" id="stopAll">Stop All</button>
+      <!-- RIGHT: Pads + Controls -->
+      <div class="gridWrap">
+        <div class="card topbar">
+          <div class="row">
+            <button class="btn primary" id="arm">Tap to Arm Audio</button>
+            <button class="btn" id="stopAll">Stop All</button>
+          </div>
+          <div class="muted">Hotkeys: 1–9, 0, Q, W, E, R, T, Y</div>
         </div>
 
-        <div class="card" style="margin-top: 10px">
+        <div class="card">
           <div class="pads" id="pads"></div>
+        </div>
+
+        <!-- ✅ Controls preserved -->
+        <div class="card">
+          <div style="font-weight: 700; margin-bottom: 6px">Pad Controls</div>
+          <div class="muted" style="margin-bottom: 10px">
+            Select a pad to edit. Controls apply per-pad.
+          </div>
+
+          <div class="controls">
+            <div class="field">
+              <label>Volume <span class="kbd" id="volLabel"></span></label>
+              <input id="vol" type="range" min="0" max="1" step="0.01" />
+            </div>
+
+            <div class="field">
+              <label
+                >Pitch / Speed <span class="kbd" id="pitchLabel"></span
+              ></label>
+              <input id="pitch" type="range" min="0.5" max="2" step="0.01" />
+            </div>
+
+            <div class="field">
+              <label
+                >Trim Start (seconds) <span class="kbd" id="trimLabel"></span
+              ></label>
+              <input id="trim" type="range" min="0" max="2" step="0.01" />
+            </div>
+
+            <div class="field">
+              <label>Choke Group</label>
+              <select id="choke">
+                <option value="">None</option>
+                <option value="1">Group 1</option>
+                <option value="2">Group 2</option>
+                <option value="3">Group 3</option>
+                <option value="4">Group 4</option>
+              </select>
+            </div>
+
+            <div class="row">
+              <button class="btn" id="clearPad">Clear Selected Pad</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
     <script>
-      const PAD_COUNT = 16;
-      const DB_NAME = "cuepad_db";
-      let db,
-        sounds = [],
-        kit = Array.from({ length: PAD_COUNT }, () => ({ soundId: null }));
+      /**
+       * CuePad — single-file app
+       * - Sounds stored locally in IndexedDB (audio as ArrayBuffer)
+       * - Pads store soundId + per-pad controls
+       * - ✅ Added Import Sounds button for mobile
+       * - ✅ Added direct file drop onto pads (auto-import + assign)
+       */
 
+      const PAD_COUNT = 16;
+      const HOTKEYS = [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "0",
+        "q",
+        "w",
+        "e",
+        "r",
+        "t",
+        "y",
+      ];
+
+      const DB_NAME = "cuepad_db";
+      const DB_VERSION = 1;
+
+      let db;
+      let sounds = []; // [{id,name,type,size,data:ArrayBuffer}]
+      let kit = []; // array length PAD_COUNT of pad objects
+      let selectedPad = 0;
+
+      const padDefaults = () => ({
+        soundId: null,
+        volume: 0.9,
+        pitch: 1.0,
+        trimStart: 0,
+        chokeGroup: null,
+      });
+
+      // ---------- WebAudio ----------
       const AudioCtx = window.AudioContext || window.webkitAudioContext;
       const audioCtx = new AudioCtx();
-      const bufferCache = new Map();
+      const bufferCache = new Map(); // soundId -> AudioBuffer
+      const activeChokes = new Map(); // chokeGroup -> AudioBufferSourceNode
 
-      const padsEl = document.getElementById("pads");
-      const libEl = document.getElementById("lib");
-      const dropEl = document.getElementById("drop");
+      async function ensureAudioRunning() {
+        if (audioCtx.state !== "running") await audioCtx.resume();
+      }
 
-      const importSoundsBtn = document.getElementById("importSounds");
-      const importSoundsFile = document.getElementById("importSoundsFile");
-      const importKitBtn = document.getElementById("importKit");
-      const importKitFile = document.getElementById("importKitFile");
+      async function getBuffer(sound) {
+        let buf = bufferCache.get(sound.id);
+        if (buf) return buf;
+        const copy = sound.data.slice(0);
+        buf = await audioCtx.decodeAudioData(copy);
+        bufferCache.set(sound.id, buf);
+        return buf;
+      }
 
+      async function playPad(padIndex) {
+        const pad = kit[padIndex];
+        if (!pad?.soundId) return;
+
+        const sound = sounds.find((s) => s.id === pad.soundId);
+        if (!sound) return;
+
+        await ensureAudioRunning();
+
+        // Choke behavior (stop previous in same group)
+        if (pad.chokeGroup != null) {
+          const prev = activeChokes.get(pad.chokeGroup);
+          if (prev) {
+            try {
+              prev.stop();
+            } catch {}
+          }
+        }
+
+        const buffer = await getBuffer(sound);
+        const src = audioCtx.createBufferSource();
+        src.buffer = buffer;
+        src.playbackRate.value = pad.pitch;
+
+        const gain = audioCtx.createGain();
+        gain.gain.value = pad.volume;
+
+        src.connect(gain).connect(audioCtx.destination);
+
+        const startAt = Math.min(
+          Math.max(0, pad.trimStart),
+          Math.max(0, buffer.duration - 0.01)
+        );
+        src.start(0, startAt);
+
+        if (pad.chokeGroup != null) activeChokes.set(pad.chokeGroup, src);
+      }
+
+      function stopAll() {
+        for (const src of activeChokes.values()) {
+          try {
+            src.stop();
+          } catch {}
+        }
+        activeChokes.clear();
+      }
+
+      // ---------- IndexedDB ----------
       function openDb() {
-        return new Promise((res) => {
-          const r = indexedDB.open(DB_NAME, 1);
-          r.onupgradeneeded = (e) => {
+        return new Promise((resolve, reject) => {
+          const req = indexedDB.open(DB_NAME, DB_VERSION);
+          req.onupgradeneeded = (e) => {
             const d = e.target.result;
-            d.createObjectStore("sounds", { keyPath: "id" });
-            d.createObjectStore("kit", { keyPath: "key" });
+            if (!d.objectStoreNames.contains("sounds"))
+              d.createObjectStore("sounds", { keyPath: "id" });
+            if (!d.objectStoreNames.contains("kit"))
+              d.createObjectStore("kit", { keyPath: "key" });
           };
-          r.onsuccess = () => res(r.result);
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => reject(req.error);
         });
       }
 
@@ -240,82 +454,292 @@
           : String(Date.now()) + Math.random();
       }
 
-      async function load() {
-        sounds = await new Promise((r) => {
-          const q = store("sounds").getAll();
-          q.onsuccess = () => r(q.result || []);
+      async function dbPutSound(sound) {
+        return new Promise((resolve, reject) => {
+          const req = store("sounds", "readwrite").put(sound);
+          req.onsuccess = () => resolve();
+          req.onerror = () => reject(req.error);
         });
-        const saved = await new Promise((r) => {
-          const q = store("kit").get("default");
-          q.onsuccess = () => r(q.result?.kit);
-        });
-        if (saved) kit = saved;
-        render();
       }
 
-      function render() {
+      async function dbGetSounds() {
+        return new Promise((resolve, reject) => {
+          const req = store("sounds").getAll();
+          req.onsuccess = () => resolve(req.result || []);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async function dbDeleteSound(id) {
+        return new Promise((resolve, reject) => {
+          const req = store("sounds", "readwrite").delete(id);
+          req.onsuccess = () => resolve();
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async function dbClearAll() {
+        await new Promise((resolve, reject) => {
+          const req = store("sounds", "readwrite").clear();
+          req.onsuccess = () => resolve();
+          req.onerror = () => reject(req.error);
+        });
+        await new Promise((resolve, reject) => {
+          const req = store("kit", "readwrite").clear();
+          req.onsuccess = () => resolve();
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async function dbSaveKit() {
+        return new Promise((resolve, reject) => {
+          const req = store("kit", "readwrite").put({ key: "default", kit });
+          req.onsuccess = () => resolve();
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      async function dbLoadKit() {
+        return new Promise((resolve, reject) => {
+          const req = store("kit").get("default");
+          req.onsuccess = () => resolve(req.result?.kit || null);
+          req.onerror = () => reject(req.error);
+        });
+      }
+
+      // ---------- Helpers ----------
+      function humanSize(bytes) {
+        const u = ["B", "KB", "MB", "GB"];
+        let i = 0,
+          n = bytes;
+        while (n >= 1024 && i < u.length - 1) {
+          n /= 1024;
+          i++;
+        }
+        return `${n.toFixed(n >= 10 || i === 0 ? 0 : 1)} ${u[i]}`;
+      }
+
+      function isAudioFile(file) {
+        return (
+          /^audio\//.test(file.type) ||
+          /\.(wav|mp3|ogg|m4a|aac)$/i.test(file.name)
+        );
+      }
+
+      // ✅ Import file into library and return the created sound record
+      async function importFileToLibrary(file) {
+        const data = await file.arrayBuffer();
+        const sound = {
+          id: uuid(),
+          name: file.name,
+          type: file.type || "audio",
+          size: file.size,
+          data,
+        };
+        await dbPutSound(sound);
+        // keep in-memory list in sync for immediate UI refresh
+        sounds.push(sound);
+        return sound;
+      }
+
+      // ---------- UI ----------
+      const padsEl = document.getElementById("pads");
+      const libEl = document.getElementById("lib");
+      const dropEl = document.getElementById("drop");
+
+      const armBtn = document.getElementById("arm");
+      const stopAllBtn = document.getElementById("stopAll");
+      const clearAllBtn = document.getElementById("clearAll");
+
+      const vol = document.getElementById("vol");
+      const pitch = document.getElementById("pitch");
+      const trim = document.getElementById("trim");
+      const choke = document.getElementById("choke");
+
+      const volLabel = document.getElementById("volLabel");
+      const pitchLabel = document.getElementById("pitchLabel");
+      const trimLabel = document.getElementById("trimLabel");
+
+      const clearPadBtn = document.getElementById("clearPad");
+      const exportKitBtn = document.getElementById("exportKit");
+      const importKitBtn = document.getElementById("importKit");
+      const importKitFile = document.getElementById("importKitFile");
+
+      // ✅ NEW: Import Sounds
+      const importSoundsBtn = document.getElementById("importSounds");
+      const importSoundsFile = document.getElementById("importSoundsFile");
+
+      function renderPads() {
         padsEl.innerHTML = "";
         for (let i = 0; i < PAD_COUNT; i++) {
-          const p = document.createElement("div");
-          p.className = "pad";
-          const s = sounds.find((x) => x.id === kit[i].soundId);
-          p.textContent = s ? s.name : `Pad ${i + 1}`;
-          p.onclick = async () => {
-            if (!s) return;
-            if (audioCtx.state !== "running") await audioCtx.resume();
-            let buf = bufferCache.get(s.id);
-            if (!buf) {
-              buf = await audioCtx.decodeAudioData(s.data.slice(0));
-              bufferCache.set(s.id, buf);
-            }
-            const src = audioCtx.createBufferSource();
-            src.buffer = buf;
-            src.connect(audioCtx.destination);
-            src.start();
-          };
-          padsEl.appendChild(p);
-        }
+          const pad = kit[i];
+          const sound = pad.soundId
+            ? sounds.find((s) => s.id === pad.soundId)
+            : null;
 
-        libEl.innerHTML = "";
-        sounds.forEach((sound) => {
-          const d = document.createElement("div");
-          d.className = "item";
-          d.textContent = sound.name;
-          d.draggable = true;
-          d.ondragstart = (e) => e.dataTransfer.setData("soundId", sound.id);
-          libEl.appendChild(d);
-        });
+          const el = document.createElement("div");
+          el.className = "pad" + (i === selectedPad ? " active" : "");
+          el.tabIndex = 0;
+
+          el.innerHTML = `
+            <div class="name">${HOTKEYS[i].toUpperCase()} — Pad ${i + 1}</div>
+            <div class="meta">${
+              sound ? "🎵 " + sound.name : "Drop a sound here"
+            }</div>
+          `;
+
+          el.onclick = async () => {
+            selectedPad = i;
+            syncControlsFromSelected();
+            renderPads();
+            await playPad(i);
+          };
+
+          // Drag target
+          el.ondragover = (e) => {
+            e.preventDefault();
+            el.classList.add("drag");
+          };
+          el.ondragleave = () => el.classList.remove("drag");
+
+          // ✅ UPDATED: pad drop supports both:
+          // - dropping a library soundId
+          // - dropping a local file (auto-import + assign)
+          el.ondrop = async (e) => {
+            e.preventDefault();
+            el.classList.remove("drag");
+
+            // Case 1: dragged from Library
+            const soundId = e.dataTransfer.getData("text/soundId");
+            if (soundId) {
+              kit[i].soundId = soundId;
+              await dbSaveKit();
+              renderPads();
+              return;
+            }
+
+            // Case 2: dragged from OS (desktop)
+            const files = Array.from(e.dataTransfer.files || []);
+            const file = files.find(isAudioFile);
+            if (!file) return;
+
+            const sound = await importFileToLibrary(file);
+            kit[i].soundId = sound.id;
+            await dbSaveKit();
+
+            renderLibrary();
+            renderPads();
+          };
+
+          padsEl.appendChild(el);
+        }
       }
 
-      importSoundsBtn.onclick = () => importSoundsFile.click();
-      importSoundsFile.onchange = async () => {
-        for (const file of importSoundsFile.files) {
-          const data = await file.arrayBuffer();
-          store("sounds", "readwrite").put({
-            id: uuid(),
-            name: file.name,
-            data,
+      function renderLibrary() {
+        libEl.innerHTML = "";
+        if (!sounds.length) {
+          libEl.innerHTML = `<div class="muted">No sounds yet. Use Import Sounds (mobile) or drop files above (desktop).</div>`;
+          return;
+        }
+
+        sounds
+          .slice()
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .forEach((sound) => {
+            const item = document.createElement("div");
+            item.className = "item";
+            item.draggable = true;
+            item.ondragstart = (e) =>
+              e.dataTransfer.setData("text/soundId", sound.id);
+
+            const left = document.createElement("div");
+            left.innerHTML = `<strong>${sound.name}</strong><small>${
+              sound.type || "audio"
+            } · ${humanSize(sound.size)}</small>`;
+
+            const right = document.createElement("div");
+            right.className = "row";
+
+            const playBtn = document.createElement("button");
+            playBtn.className = "btn";
+            playBtn.textContent = "Play";
+            playBtn.onclick = async () => {
+              // quick preview: assign to selected pad then play
+              kit[selectedPad] = { ...kit[selectedPad], soundId: sound.id };
+              await dbSaveKit();
+              renderPads();
+              await playPad(selectedPad);
+            };
+
+            const delBtn = document.createElement("button");
+            delBtn.className = "btn danger";
+            delBtn.textContent = "Delete";
+            delBtn.onclick = async () => {
+              await dbDeleteSound(sound.id);
+              bufferCache.delete(sound.id);
+
+              // remove from pads
+              kit.forEach((p) => {
+                if (p.soundId === sound.id) p.soundId = null;
+              });
+              await dbSaveKit();
+              await loadAndRender();
+            };
+
+            right.append(playBtn, delBtn);
+            item.append(left, right);
+            libEl.append(item);
           });
-        }
-        importSoundsFile.value = "";
-        await load();
+      }
+
+      function syncControlsFromSelected() {
+        const p = kit[selectedPad];
+        vol.value = String(p.volume);
+        pitch.value = String(p.pitch);
+        trim.value = String(p.trimStart);
+        choke.value = p.chokeGroup == null ? "" : String(p.chokeGroup);
+
+        volLabel.textContent = `(${Number(p.volume).toFixed(2)})`;
+        pitchLabel.textContent = `(${Number(p.pitch).toFixed(2)}x)`;
+        trimLabel.textContent = `(${Number(p.trimStart).toFixed(2)}s)`;
+      }
+
+      async function updateSelected(key, value) {
+        kit[selectedPad][key] = value;
+        await dbSaveKit();
+        syncControlsFromSelected();
+      }
+
+      vol.oninput = () => updateSelected("volume", Number(vol.value));
+      pitch.oninput = () => updateSelected("pitch", Number(pitch.value));
+      trim.oninput = () => updateSelected("trimStart", Number(trim.value));
+      choke.onchange = () =>
+        updateSelected("chokeGroup", choke.value ? Number(choke.value) : null);
+
+      armBtn.onclick = ensureAudioRunning;
+      stopAllBtn.onclick = stopAll;
+
+      clearPadBtn.onclick = async () => {
+        kit[selectedPad] = padDefaults();
+        await dbSaveKit();
+        syncControlsFromSelected();
+        renderPads();
       };
 
-      importKitBtn.onclick = () => importKitFile.click();
-      importKitFile.onchange = async () => {
-        const file = importKitFile.files[0];
-        if (!file) return;
-        try {
-          const parsed = JSON.parse(await file.text());
-          kit = parsed.pads;
-          store("kit", "readwrite").put({ key: "default", kit });
-          render();
-        } catch {
-          alert("Invalid kit.json");
-        }
-        importKitFile.value = "";
+      clearAllBtn.onclick = async () => {
+        if (
+          !confirm(
+            "This clears ALL sounds and your kit from this browser/device. Continue?"
+          )
+        )
+          return;
+        bufferCache.clear();
+        stopAll();
+        await dbClearAll();
+        await loadAndRender();
       };
 
+      // Drop files into library (desktop)
       dropEl.ondragover = (e) => {
         e.preventDefault();
         dropEl.classList.add("drag");
@@ -324,33 +748,128 @@
       dropEl.ondrop = async (e) => {
         e.preventDefault();
         dropEl.classList.remove("drag");
-        for (const f of e.dataTransfer.files) {
-          if (!f.type.startsWith("audio/")) continue;
-          const data = await f.arrayBuffer();
-          store("sounds", "readwrite").put({ id: uuid(), name: f.name, data });
+        const files = Array.from(e.dataTransfer.files || []);
+        const audioFiles = files.filter(isAudioFile);
+        if (!audioFiles.length)
+          return alert("Drop audio files (wav/mp3/ogg/m4a).");
+
+        for (const file of audioFiles) {
+          await importFileToLibrary(file);
         }
-        await load();
+        await loadAndRender();
       };
 
-      document.getElementById("clearAll").onclick = async () => {
-        if (!confirm("Clear everything?")) return;
-        store("sounds", "readwrite").clear();
-        store("kit", "readwrite").clear();
-        sounds = [];
-        kit = Array.from({ length: PAD_COUNT }, () => ({ soundId: null }));
-        render();
+      // ✅ NEW: Import Sounds (mobile-safe)
+      importSoundsBtn.onclick = () => importSoundsFile.click();
+      importSoundsFile.onchange = async () => {
+        const files = Array.from(importSoundsFile.files || []);
+        if (!files.length) return;
+
+        const audioFiles = files.filter(isAudioFile);
+        if (!audioFiles.length) {
+          alert("Please select audio files (wav/mp3/ogg/m4a/aac).");
+          importSoundsFile.value = "";
+          return;
+        }
+
+        for (const file of audioFiles) {
+          await importFileToLibrary(file);
+        }
+
+        importSoundsFile.value = "";
+        await loadAndRender();
       };
 
-      document.getElementById("arm").onclick = () => audioCtx.resume();
-      document.getElementById("stopAll").onclick = () => audioCtx.close();
+      // Export / Import kit as JSON
+      exportKitBtn.onclick = async () => {
+        const payload = { name: "My Kit", pads: kit };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], {
+          type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "kit.json";
+        a.click();
+        URL.revokeObjectURL(url);
+      };
 
-      (async () => {
+      importKitBtn.onclick = () => importKitFile.click();
+      importKitFile.onchange = async () => {
+        const file = importKitFile.files?.[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const parsed = JSON.parse(text);
+          if (!Array.isArray(parsed.pads) || parsed.pads.length !== PAD_COUNT) {
+            return alert("Invalid kit file (pads length must be 16).");
+          }
+          kit = parsed.pads.map((p) => ({
+            soundId: p.soundId ?? null,
+            volume: Number.isFinite(p.volume) ? p.volume : 0.9,
+            pitch: Number.isFinite(p.pitch) ? p.pitch : 1.0,
+            trimStart: Number.isFinite(p.trimStart) ? p.trimStart : 0,
+            chokeGroup:
+              p.chokeGroup === null || p.chokeGroup === undefined
+                ? null
+                : Number(p.chokeGroup),
+          }));
+          await dbSaveKit();
+          syncControlsFromSelected();
+          renderPads();
+        } catch {
+          alert("Could not import kit.json (invalid JSON).");
+        } finally {
+          importKitFile.value = "";
+        }
+      };
+
+      // Hotkeys
+      window.addEventListener("keydown", async (e) => {
+        const tag = (e.target?.tagName || "").toLowerCase();
+        if (tag === "input" || tag === "select" || tag === "textarea") return;
+
+        const k = e.key.toLowerCase();
+        const idx = HOTKEYS.indexOf(k);
+        if (idx !== -1) {
+          selectedPad = idx;
+          syncControlsFromSelected();
+          renderPads();
+          await playPad(idx);
+        }
+      });
+
+      // Boot
+      async function loadAndRender() {
+        sounds = await dbGetSounds();
+        const saved = await dbLoadKit();
+        kit =
+          saved && Array.isArray(saved) && saved.length === PAD_COUNT
+            ? saved
+            : Array.from({ length: PAD_COUNT }, () => padDefaults());
+
+        // Ensure selected pad exists
+        selectedPad = Math.min(selectedPad, PAD_COUNT - 1);
+
+        syncControlsFromSelected();
+        renderLibrary();
+        renderPads();
+      }
+
+      (async function init() {
         db = await openDb();
-        await load();
+        await loadAndRender();
       })();
 
+      // Register Service Worker (PWA offline app shell)
       if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("./sw.js");
+        window.addEventListener("load", async () => {
+          try {
+            await navigator.serviceWorker.register("./sw.js", { scope: "./" });
+          } catch (e) {
+            console.warn("SW registration failed:", e);
+          }
+        });
       }
     </script>
   </body>
